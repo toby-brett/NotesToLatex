@@ -1,0 +1,41 @@
+from model import *
+
+def getCells(vertLines, hozLines, image):
+
+    cellList = []
+    numList = []
+
+    rows = len(hozLines) - 1
+    cols = len(vertLines) - 1
+
+    for r in range(rows):
+        cellList.append([])
+        for c in range(cols):
+
+            top = round((hozLines[r][1] + hozLines[r][3]) / 2) # average of where it crosses the edge of both sides of the scren
+            bottom = round((hozLines[r+1][1] + hozLines[r+1][3]) / 2)
+            left = round((vertLines[c][0] + vertLines[c][2]) / 2)
+            right = round((vertLines[c+1][0] + vertLines[c+1][2]) / 2)
+
+            width = right - left
+            height = bottom - top
+
+            offsetW = round(width / 8)
+            offsetH = round(height / 8)
+
+            top += offsetH
+            bottom -= offsetH
+            left += offsetW
+            right -= offsetW
+
+            cell = image[top:bottom, left:right]
+
+            cellList[-1].append(cell)
+
+    for row in cellList:
+        numList.append([])
+        for cell in row:
+            numList[-1].append(predict(cell))
+
+    return numList, rows, cols
+
