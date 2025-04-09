@@ -1,105 +1,80 @@
+import cv2
+from tableHandler import *
 from ProcessImage import *
 from lineHandler import *
 import matplotlib.pyplot as plt
-from cellHandler import *
+from model import *
+from laTeX import *
 
-imageOG = cv2.imread("7.png")
-image = cv2.imread("7.png", cv2.IMREAD_GRAYSCALE)
+imageOG = cv2.imread("18.png") # loads origional image in color, for drawing lines and text recog
+image = cv2.imread("18.png", cv2.IMREAD_GRAYSCALE) # loads in greyscale (for processing)
+
 width = image.shape[1]
 height = image.shape[0]
 
-processed = process(image)
+processed, processedForText = process(image) # processes image (see ProcessImage.py)
 
-averageSize = ((width + height) / 2)
-threshold = int(averageSize / 5)
-minLineLength = int(averageSize / 5)
 
-lines = cv2.HoughLinesP(processed,
-                        1,
-                        np.pi / 180,
-                        threshold,
-                        minLineLength=minLineLength,
-                        maxLineGap=4)
+averageSize = ((width + height) / 2) # calculates average dimensions for parameters
+threshold = int(averageSize / 15) # the number of pixels needed to class as a line (bigger = more selective with line choice)
+minLineLength = int(averageSize / 15) # the smallest line allowed (smaller and it will detect more lines)
 
-extended_lines = []
+lines = cv2.HoughLinesP(processed, # the image which lines are being detected from
+                        1, # the detail to which the image is searched (granularity of 1 pixel) dont change this works well
+                        np.pi / 180, # the detail to which the image is searched (angle of 1 degree)
+                        threshold, # above
+                        minLineLength=minLineLength, # above
+                        maxLineGap=1) # the maximum gap in a line where it is still considered a line (experiment)
 
-extending = True
-filtering = True
+extended_lines = [] # list of extended lines (for filtereing)
+unextended_lines = [] # list of unextended line (for finding  the start and end points of the line)
 
-for line in lines:
-    if extending:
-        extended_lines.append(extend(line[0], width, height))
-    else:
-        extended_lines.append(line[0]) # not extended
+filtering = True # turn off if you want to see all the lines before they are filtered
 
-hozLines, vertLines = getDirection(extended_lines)
+for line in lines: # checks every line detected by houghLinesP (in the form x1, y1, x2, y2)
+    extended_lines.append(extend(line[0], width, height)) # extends the lines to the screens max
+    unextended_lines.append(line[0]) # not extended (saves for finding endpoints of lines)
+
+unextended_hoz_lines, unextended_vert_lines = getDirection(unextended_lines)
+hozLines, vertLines = getDirection(extended_lines) # seperates into horizontal and vertical lines for seperate processing)
+
 if filtering:
-    hozLines = filterLines(hozLines, "H", width, height)
-    vertLines = filterLines(vertLines, "V", width, height)
+    hozLines = filterHorizontalLines(hozLines, unextended_hoz_lines, width, height) # filters lines
+    vertLines = filterVerticalLines(vertLines, unextended_vert_lines, width, height, imageOG) # filters lines
+
+vertLinesFiltered = []
+hozLinesFiltered = []
 
 for line in hozLines:
-    x1, y1, x2, y2 = line
+    if filtering:
+        x1, y1, x2, y2 = getHorizontalLine(line) # from  (x1, y1, x2, y2, minX, maxX) to (x1, y1, x2, y2)
+    else:
+        x1, y1, x2, y2 = line # never found min and max X so converting is not needed
+
+    hozLinesFiltered.append([x1, y1, x2, y2])
+    cv2.line(imageOG, (x1, y1), (x2, y2), (255, 0, 0), 2) # adds each line to the image for visualisation
+
+for line in vertLines: # same thing for vertlines (but with min and max Y)
+    if filtering:
+        x1, y1, x2, y2 = getVerticalLine(line)
+    else:
+        x1, y1, x2, y2 = line
+
+    vertLinesFiltered.append([x1, y1, x2, y2])
     cv2.line(imageOG, (x1, y1), (x2, y2), (255, 0, 0), 2)
-
-for line in vertLines:
-    x1, y1, x2, y2 = line
-    cv2.line(imageOG, (x1, y1), (x2, y2), (255, 0, 0), 2)
-
-hozLines = sorted(hozLines, key=lambda x: x[1])
-vertLines = sorted(vertLines, key=lambda x: x[0])
-
-predict = True
-if predict:
-    textList, rows, cols = getCells(vertLines, hozLines, imageOG)
-
-    fig, ax = plt.subplots(figsize=(4,2))
-    ax.axis("tight")
-    ax.axis("off")
-
-    table = ax.table(cellText=textList, loc="center")
-
-cv2.imshow("name3", imageOG)
-
-plt.show()
-
+cv2.imshow('win', imageOG)
 cv2.waitKey(0)
-cv2.destroyAllWindows()
 
-'''
-Morphological Operations:
+hozLinesStraight, vertLinesStraight, hozLinesLong, vertLinesLong = getLines(hozLinesFiltered, vertLinesFiltered, imageOG)
+intersections = getIntersections(hozLinesStraight, vertLinesStraight)
+cells = getCells(intersections)
 
-2. Improve Edge and Line Detection
+textList = []
+for row in cells:
+    textList.append([])
+    for cell in row:
+        prediction = predict(cell, processedForText)
+        textList[-1].append(prediction)
 
-Dynamic Hough Transform Parameters:
 
-Instead of computing a fixed threshold from the average image dimensions, consider adapting the Hough transform parameters based on the content of the image (for example, using local image statistics).
-
-Tune parameters like the minimum line length and maximum line gap according to the resolution and expected cell size.
-
-Clustering & Merging: Enhance your line merging routine by applying clustering techniques (e.g., using DBSCAN on line parameters) to combine lines that are nearly collinear. This helps in merging duplicate detections and reducing noise.
-
-3. Post-Processing Enhancements
-Contour Analysis: Once you have candidate cells, use contour detection to validate and refine the boundaries. This may involve checking for expected aspect ratios or area ranges.
-
-Skew and Perspective Correction: If your images might be rotated or skewed, apply a deskewing step before processing. Correcting perspective can significantly improve the accuracy of line detection.
-
-Refined Filtering: Revisit your filtering criteria in filterLines(). Consider adaptive thresholds based on local line density or a more robust averaging method that accounts for outliers.
-
-4. Explore Alternative or Complementary Approaches
-Deep Learning Methods:
-
-Investigate deep learning models (such as CNN-based table detectors) that have been trained on a variety of table structures. These models often generalize better to different document layouts.
-
-Hybrid approaches that combine classical techniques (like Hough transforms) with deep learning for post-processing validation can be effective.
-
-Existing Table Extraction Libraries: Look into libraries like Camelot or Tabula which use robust methods to extract tables. Even if you don’t use them directly, their methodologies might inspire improvements in your algorithm.
-
-5. Testing and Iteration
-Diverse Dataset: Test your algorithm on a variety of images with different table formats and qualities. This will help you identify specific scenarios where your current approach fails.
-
-Parameter Optimization: Use cross-validation or grid search on a validation set to automatically tune your parameters for the best performance across diverse conditions.
-
-By combining these strategies, you can create a more robust algorithm that better handles the variations in table layout, noise, and distortions, ultimately leading to a higher detection rate.
-
-These suggestions are based on common practices in image processing and table detection improvements found in community discussions and research on document analysis .
-'''
+getFormula(cells, textList)
