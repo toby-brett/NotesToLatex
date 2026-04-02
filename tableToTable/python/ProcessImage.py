@@ -20,31 +20,40 @@ def process(image):
     eroded = cv2.erode(dilated, kernelE, iterations=1)
 
     # Try not using canny edge
-    inverted = cv2.bitwise_not(eroded)
+    inverted = 255 - eroded
     invertedPreserved = inverted
 
     # Canny Edge Parameters: Adjust the thresholds used in the Canny detector. Sometimes using two sets of thresholds or automatically setting them based on the image histogram can yield better edge maps.
     canny = cv2.Canny(eroded, 150, 200)
 
-    # remove small components (like text)
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(inverted, connectivity=8)  # top topleft left bottomleft bottom bottomright right toptight are all considered "touching"
-    for i, stat in enumerate(stats):
-        x, y, w, h, area = stat
-        max_area_considered_text = (width * height) * 0.04 # if it covers more than 4 percent of the image, then it is considered the table
-        if area < max_area_considered_text:  # area of blob (text gets removed)
-            inverted[labels == i] = 0
+    # # remove small components (like text) - BETA DOES NOT WORK
+    # num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(inverted, connectivity=8)  # top topleft left bottomleft bottom bottomright right toptight are all considered "touching"
+    # for i, stat in enumerate(stats):
+    #     x, y, w, h, area = stat
+    #     max_area_considered_text = (width * height) * 0.04 # if it covers more than 4 percent of the image, then it is considered the table
+    #     if area < max_area_considered_text:  # area of blob (text gets removed)
+    #         inverted[labels == i] = 0
+    #
+    # removed_text = inverted
 
-    removed_text = inverted
 
+    cv2.imshow("press 0 to continue", blurred)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.imshow("press 0 to continue", median)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.imshow("press 0 to continue", threshold)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.imshow("press 0 to continue", dilated)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.imshow("press 0 to continue", eroded)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    cv2.imshow("press 0 to continue", inverted)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
-    # cv2.imshow("1", blurred)
-    # cv2.imshow("2", median)
-    # cv2.imshow("3", threshold)
-    # cv2.imshow("4", dilated)
-    # cv2.imshow("5", eroded)
-    # cv2.imshow("6", invertedPreserved)
-    # cv2.imshow("7", removed_text)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
-
-    return removed_text, eroded
+    return inverted, inverted

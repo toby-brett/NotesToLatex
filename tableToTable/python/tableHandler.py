@@ -84,6 +84,9 @@ def getLines(hozLines, vertLines, image):
         cv2.line(image, (line[0], int(line[1])), (line[2], int(line[3])), (0, 255, 0), 2)
     for line in vertLinesStraight:
         cv2.line(image, (int(line[0]), line[1]), (int(line[2]), line[3]), (0, 255, 0), 2)
+    cv2.imshow("Press 0 to continue ... ", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     return hozLinesStraight, vertLinesStraight, hozLinesLong, vertLinesLong
 
