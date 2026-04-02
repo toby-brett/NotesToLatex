@@ -3,15 +3,16 @@
 ## What does it do?
 Aims to take a handwritten page of notes and convert it into LaTeX. Currently only has **TableToLatex**, which takes a hand-drawn table (with text) and converts it into a LaTeX table.
 
-## Examples
-![Example 1](tableToTable/examples/example1)
+# Examples
+| Output \| Input |
+|-------|
 ![Example 2](tableToTable/examples/example2)
 ![Example 3](tableToTable/examples/example3)
 ![Example 4](tableToTable/examples/example4)
 
 I used a pretrained OCR model for text recognition (terrible results, but just a placeholder — my main focus was the table backbone). If I were to continue this project I would certainly train a better one myself.
 
-## Pipeline
+# Pipeline
 
 **Raw image:**
 
