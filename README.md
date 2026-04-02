@@ -85,3 +85,10 @@ lines = cv2.HoughLinesP(processed,
 \end{table}
 \end{document}
 ```
+
+# How to run
+Clone the repo
+```python
+git clone https://github.com/toby-brett/NotesToLatex.git
+```
+Run main.py, replacing image.png with your image
