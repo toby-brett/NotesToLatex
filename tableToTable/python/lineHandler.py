@@ -1,8 +1,5 @@
-import math
-
 import numpy as np
-from sklearn.cluster import OPTICS
-import cv2
+
 
 def extend(line, width, height): # function to extend the lines
 

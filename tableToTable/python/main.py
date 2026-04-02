@@ -1,18 +1,18 @@
 import logging
 
-from tableHandler import *
-from ProcessImage import *
-from lineHandler import *
-from model import *
-from laTeX import *
+from NotesToLatex.tableToTable.python.tableHandler import *
+from NotesToLatex.tableToTable.python.ProcessImage import *
+from NotesToLatex.tableToTable.python.lineHandler import *
+from NotesToLatex.tableToTable.python.model import *
+from NotesToLatex.tableToTable.python.laTeX import *
 
 def show(title, img):
     cv2.imshow(title, img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-imageOG = cv2.imread("image.png") # loads origional image in color, for drawing lines and text recog
-image = cv2.imread("image.png", cv2.IMREAD_GRAYSCALE) # loads in greyscale (for processing)
+imageOG = cv2.imread("NotesToLatex/tableToTable/python/image.png") # loads origional image in color, for drawing lines and text recog
+image = cv2.imread("NotesToLatex/tableToTable/python/image.png", cv2.IMREAD_GRAYSCALE) # loads in greyscale (for processing)
 
 width = image.shape[1]
 height = image.shape[0]
@@ -56,7 +56,6 @@ if filtering:
 vertLinesFiltered = []
 hozLinesFiltered = []
 
-debug = imageOG.copy()
 for line in hozLines:
     if filtering:
         x1, y1, x2, y2 = getHorizontalLine(line) # from  (x1, y1, x2, y2, minX, maxX) to (x1, y1, x2, y2)
@@ -64,8 +63,8 @@ for line in hozLines:
         x1, y1, x2, y2 = line # never found min and max X so converting is not needed
 
     hozLinesFiltered.append([x1, y1, x2, y2])
-    cv2.line(debug, (x1, y1), (x2, y2), (255, 0, 0), 2) # adds each line to the image for visualisation
-    show("press 0 to continue", debug)
+    cv2.line(imageOG, (x1, y1), (x2, y2), (255, 0, 0), 2) # adds each line to the image for visualisation
+    show("press 0 to continue", imageOG)
 
 for line in vertLines: # same thing for vertlines (but with min and max Y)
     if filtering:
@@ -74,8 +73,8 @@ for line in vertLines: # same thing for vertlines (but with min and max Y)
         x1, y1, x2, y2 = line
 
     vertLinesFiltered.append([x1, y1, x2, y2])
-    cv2.line(debug, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    show("press 0 to continue", debug)
+    cv2.line(imageOG, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    show("press 0 to continue", imageOG)
 
 
 hozLinesStraight, vertLinesStraight, hozLinesLong, vertLinesLong = getLines(hozLinesFiltered, vertLinesFiltered, imageOG)

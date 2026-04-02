@@ -1,4 +1,4 @@
-from lineHandler import *
+from NotesToLatex.tableToTable.python.lineHandler import *
 import cv2
 import numpy as np
 
