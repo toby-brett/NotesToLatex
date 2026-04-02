@@ -1,7 +1,10 @@
-# NotesToLatex *(unfinished)*
+# NotesToLatex
+*(unfinished)*
 
-## What does it do?
-Aims to take a handwritten page of notes and convert it into LaTeX. Currently only has **TableToLatex**, which takes a hand-drawn table (with text) and converts it into a LaTeX table.
+Turn a photo of handwritten notes into LaTeX.
+
+The only working piece right now is **TableToLatex** - point it at a photo of a hand-drawn table and it'll return out a `\begin{tabular}` block. Full page parsing is the eventual goal.
+
 
 # Examples
 | Output \| Input |
@@ -18,35 +21,35 @@ I used a pretrained OCR model for text recognition (terrible results, but just a
 
 ![Raw Image](tableToTable/examples/plain.png)
 
-**1. Gaussian blur** to smooth the image:
+1. **Gaussian blur** - smooths before thresholding
 ```python
 blurred = cv2.GaussianBlur(image, (5, 5), 2)
 ```
 ![Blurred Image](tableToTable/examples/blur.png)
 
-**2. Adaptive threshold** so the image is all black or white:
+2. **Adaptive threshold** - black and white, handles uneven lighting
 ```python
 threshold = cv2.adaptiveThreshold(median, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 3)
 ```
 ![Thresholded Image](tableToTable/examples/threshold1.png)
 
-**3. Dilation** to connect any broken table segments:
+3. **Dilation** - thickens lines to close any gaps in the table border
 ```python
 dilated = cv2.dilate(threshold, kernelD, iterations=1)
 ```
 ![Dilated Image](tableToTable/examples/thicken.png)
 
-**4. Erosion** to remove noise:
+4. **Erosion** - strips leftover noise
 ```python
 eroded = cv2.erode(dilated, kernelE, iterations=1)
 ```
 ![Eroded Image](tableToTable/examples/denoise.png)
 
-**5. Invert** so OpenCV can run HoughLines:
+5. **Invert** - HoughLinesP wants white-on-black
 
 ![Inverted Image](tableToTable/examples/invert.png)
 
-**6. Line detection** with HoughLinesP:
+6. **Hough line detection** - finds line segments
 ```python
 lines = cv2.HoughLinesP(processed,
                         1,
@@ -57,15 +60,15 @@ lines = cv2.HoughLinesP(processed,
 ```
 ![Detected Lines](tableToTable/examples/image.png)
 
-**7. Line filtering:**
+7. **Line filtering** - keeps only horizontal/vertical, drops the rest
 
 ![Filtered Lines](tableToTable/examples/hozandvert.png)
 
-**8. Table construction:**
+8. **Table construction** - finds intersections, infers cells
 
 ![Full Table](tableToTable/examples/full_table.png)
 
-**9. LaTeX output:**
+9. **OCR + output** - reads each cell, assembles the LaTeX
 ```latex
 \documentclass{article}
 \usepackage{multirow}
@@ -85,10 +88,16 @@ lines = cv2.HoughLinesP(processed,
 \end{table}
 \end{document}
 ```
+The OCR is bad — I'm using a pretrained model as a placeholder. That was never the point; I wanted to get the table structure right first. I'd train something better if I continued it.
 
-# How to run
-Clone the repo
-```python
+
+## Setup
+Requires Python 3.
+```bash
 git clone https://github.com/toby-brett/NotesToLatex.git
+pip install -r requirements.txt
+cd NotesToLatex/tableToTable
+python main.py --image your_image.png
 ```
-Run main.py, replacing image.png with your image
+Built with [OpenCV](https://opencv.org/) and [Tesseract](https://github.com/tesseract-ocr/tesseract).
+
