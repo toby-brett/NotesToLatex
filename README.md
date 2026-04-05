@@ -88,7 +88,7 @@ lines = cv2.HoughLinesP(processed,
 \end{table}
 \end{document}
 ```
-The OCR is bad — I'm using a pretrained model as a placeholder. That was never the point; I wanted to get the table structure right first. I'd train something better if I continued it.
+The OCR is bad, I'm using a pretrained model as a placeholder. That was never the point; I wanted to get the table structure right first. I'd train something better if I continued it.
 
 
 ## Setup
